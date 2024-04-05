@@ -15,14 +15,10 @@
 #
 
 import numpy as np
-#import tensorflow as tf
-#import torch
 import tensorrt as trt
 
 import pycuda.driver as cuda
 import pycuda.autoinit
-
-# For ONNX:
 
 class ONNXClassifierWrapper():
     def __init__(self, file, num_classes, target_dtype=np.float32):
@@ -74,7 +70,7 @@ def convert_trt(onnx_filename, trt_filename, half):
     network = builder.create_network(EXPLICIT_BATCH)
     parser = trt.OnnxParser(network, TRT_LOGGER)
     builder_config = builder.create_builder_config()
-    builder_config.max_workspace_size = 1 << 30
+    builder_config.max_workspace_size = 3 << 30
     if half:
         builder_config.set_flag(trt.BuilderFlag.FP16)
     
