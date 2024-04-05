@@ -113,11 +113,11 @@ if __name__ == "__main__":
 
     labels_map=json.load(open(f'{current_dir}/labels_map.txt'))
     labels_map=[labels_map[str(i)] for i in range(1000)]
-    ori_img=Image.open(f"{current_dir}/{imagename}")
+    ori_img=Image.open(f"{current_dir}/input_img/{imagename}")
 
     model = build_model(modelver, modeltp, cls_num=len(labels_map))
     img = image_preprocess(ori_img)
     inf_time, results = eval(model, modeltp, img)
-    ori_img = cv2.imread(f"{current_dir}/{imagename}")
+    ori_img = cv2.imread(f"{current_dir}/input_img/{imagename}")
     visualize(ori_img, imagename, results)
     print(f"\nModel Inference Time: {inf_time*1000:.2f}ms\n")
