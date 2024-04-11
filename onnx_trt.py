@@ -15,27 +15,27 @@
 #
 
 import numpy as np
-import tensorrt as trt
-
-import pycuda.driver as cuda
 import pycuda.autoinit
+import pycuda.driver as cuda
+import tensorrt as trt
+import time
 
 class ONNXClassifierWrapper():
     def __init__(self, file, num_classes, target_dtype=np.float32):
-        
+
         self.target_dtype = target_dtype
         self.num_classes = num_classes
         self.load(file)
-        
+
         self.stream = None
-      
+
     def load(self, file):
         f = open(file, "rb")
-        runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING)) 
+        runtime = trt.Runtime(trt.Logger(trt.Logger.WARNING))
 
         engine = runtime.deserialize_cuda_engine(f.read())
         self.context = engine.create_execution_context()
-        
+
     def allocate_memory(self, batch):
         self.output = np.empty(self.num_classes, dtype=self.target_dtype) # Need to set both input and output precisions to FP16 to fully enable FP16
 
@@ -46,26 +46,31 @@ class ONNXClassifierWrapper():
         self.bindings = [int(self.d_input), int(self.d_output)]
 
         self.stream = cuda.Stream()
-        
-    def predict(self, batch): # result gets copied into output
+
+    def predict(self, batch, eval_exec_time = False): # result gets copied into output
         if self.stream is None:
             self.allocate_memory(batch)
-            
+
         # Transfer input data to device
         cuda.memcpy_htod_async(self.d_input, batch, self.stream)
+
         # Execute model
+        if eval_exec_time:
+            t_start = time.time()
         self.context.execute_async_v2(self.bindings, self.stream.handle, None)
+        if eval_exec_time:
+            t_inference = time.time() - t_start
         # Transfer predictions back
         cuda.memcpy_dtoh_async(self.output, self.d_output, self.stream)
         # Syncronize threads
         self.stream.synchronize()
-        
-        return self.output
-    
+
+        return (t_inference, self.output) if eval_exec_time else self.output
+
 def convert_trt(onnx_filename, trt_filename, half):
     TRT_LOGGER = trt.Logger(trt.Logger.INFO)
     EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-    
+
     builder = trt.Builder(TRT_LOGGER)
     network = builder.create_network(EXPLICIT_BATCH)
     parser = trt.OnnxParser(network, TRT_LOGGER)
@@ -73,7 +78,7 @@ def convert_trt(onnx_filename, trt_filename, half):
     builder_config.max_workspace_size = 3 << 30
     if half:
         builder_config.set_flag(trt.BuilderFlag.FP16)
-    
+
     with open(onnx_filename, 'rb') as model:
         if not parser.parse(model.read()):
             for error in range(parser.num_errors):
