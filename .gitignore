@@ -1,3 +1,2 @@
 *.engine
-*.onnx
 __pycache__/
