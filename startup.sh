@@ -22,6 +22,7 @@ pip3 install onnx==1.16.0
 pip3 install numpy==1.24.4
 pip3 install pycuda==2024.1
 pip3 install efficientnet-pytorch==0.7.1
+pip3 install seaborn
 
 # echo "Pytorch 1.13.0"
 # echo "Torchvision 0.14.1"
