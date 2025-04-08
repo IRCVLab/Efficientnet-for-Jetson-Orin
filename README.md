@@ -50,11 +50,6 @@ sh startup.sh
 
 
 ## TODO
-- Install required python packages
-    ```bash
-    $ pip3 install -r requirements.txt
-    ```
-
 - Open the jupyter notebook file (`demo.ipynb`), run each cell, see what happens.
 - `classification.py` will do the similar thing at once.
     ```bash
