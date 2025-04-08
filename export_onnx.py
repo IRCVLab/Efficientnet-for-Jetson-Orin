@@ -13,8 +13,16 @@ model = enet.from_pretrained(f'efficientnet-{modelver}')
 model = model.cuda()
 
 onnx_filename = f"models/efnet-{modelver}.onnx"
-if not os.path.exists(onnx_filename):
-    print("Building ONNX & TensorRT model\nThis will take about 10 min or more")
-    dummy_input = torch.randn(1, 3, INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE).cuda()
-    model.set_swish(memory_efficient=False)
-    torch.onnx.export(model, dummy_input, onnx_filename, verbose=True)
+
+print("Building ONNX & TensorRT model\nThis will take about 10 min or more")
+dummy_input = torch.randn(1, 3, INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE).cuda()
+model.set_swish(memory_efficient=False)
+torch.onnx.export(
+    model,
+    dummy_input,
+    onnx_filename,
+    verbose=True,
+    input_names=['input'],
+    output_names=['logits'],
+    opset_version=16
+)
