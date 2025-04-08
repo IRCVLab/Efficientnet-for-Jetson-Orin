@@ -57,7 +57,8 @@ class ONNXClassifierWrapper():
         # Execute model
         if eval_exec_time:
             t_start = time.time()
-        self.context.execute_async_v2(self.bindings, self.stream.handle, None)
+        # self.context.execute_async_v2(self.bindings, self.stream.handle, None)
+        self.context.execute_async_v3(self.bindings, self.stream.handle, None)
         if eval_exec_time:
             t_inference = time.time() - t_start
         # Transfer predictions back
@@ -69,23 +70,29 @@ class ONNXClassifierWrapper():
 
 def convert_trt(onnx_filename, trt_filename, half):
     TRT_LOGGER = trt.Logger(trt.Logger.INFO)
-    EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    EXPLICIT_BATCH = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 
     builder = trt.Builder(TRT_LOGGER)
     network = builder.create_network(EXPLICIT_BATCH)
     parser = trt.OnnxParser(network, TRT_LOGGER)
-    builder_config = builder.create_builder_config()
-    # builder_config.max_workspace_size = 3 << 30
-    builder_config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 3 << 30)
-    if half:
-        builder_config.set_flag(trt.BuilderFlag.FP16)
 
     with open(onnx_filename, 'rb') as model:
         if not parser.parse(model.read()):
-            for error in range(parser.num_errors):
-                print (parser.get_error(error))
-    plan = builder.build_serialized_network(network, builder_config)
-    with trt.Runtime(TRT_LOGGER) as runtime:
-        engine = runtime.deserialize_cuda_engine(plan)
-    with open(trt_filename, 'wb') as f:
-        f.write(engine.serialize())
+            print("❌ Failed to parse ONNX model.")
+            for error_idx in range(parser.num_errors):
+                print(parser.get_error(error_idx))
+            raise RuntimeError("❌ ONNX parsing failed.")
+
+    config = builder.create_builder_config()
+    config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 3 << 30)  # 3GB
+    if half:
+        config.set_flag(trt.BuilderFlag.FP16)
+
+    print("🛠️ Building TensorRT engine...")
+    engine = builder.build_serialized_network(network, config)
+    if engine is None:
+        raise RuntimeError("❌ TensorRT build failed.")
+
+    with open(trt_filename, "wb") as f:
+        f.write(engine)
+    print(f"✅ Engine saved at {trt_filename}")
