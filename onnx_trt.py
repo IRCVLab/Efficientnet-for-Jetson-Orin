@@ -75,7 +75,8 @@ def convert_trt(onnx_filename, trt_filename, half):
     network = builder.create_network(EXPLICIT_BATCH)
     parser = trt.OnnxParser(network, TRT_LOGGER)
     builder_config = builder.create_builder_config()
-    builder_config.max_workspace_size = 3 << 30
+    # builder_config.max_workspace_size = 3 << 30
+    builder_config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 3 << 30)
     if half:
         builder_config.set_flag(trt.BuilderFlag.FP16)
 
