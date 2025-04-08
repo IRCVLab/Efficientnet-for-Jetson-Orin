@@ -58,7 +58,7 @@ class ONNXClassifierWrapper():
         if eval_exec_time:
             t_start = time.time()
         # self.context.execute_async_v2(self.bindings, self.stream.handle, None)
-        self.context.execute_async_v3(self.bindings, self.stream.handle, None)
+        self.context.execute_async_v3(stream_handle=self.stream.handle)
         if eval_exec_time:
             t_inference = time.time() - t_start
         # Transfer predictions back
