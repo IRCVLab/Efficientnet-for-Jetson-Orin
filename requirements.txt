@@ -1,4 +1,4 @@
 onnx==1.16.0
-numpy==1.20.3
+# numpy==1.20.3
 pycuda==2024.1
 efficientnet-pytorch==0.7.1
