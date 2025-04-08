@@ -19,14 +19,14 @@
 #cd ../  # attempting to load torchvision from build dir will result in import error
 
 pip3 install onnx==1.16.0
-pip3 install numpy==1.20.3
+pip3 install numpy==1.24.4
 pip3 install pycuda==2024.1
 pip3 install efficientnet-pytorch==0.7.1
 
-echo "Pytorch 1.13.0"
-echo "Torchvision 0.14.1"
+# echo "Pytorch 1.13.0"
+# echo "Torchvision 0.14.1"
 echo "efficientnet-pytorch==0.7.1"
 echo "onnx 1.16.0"
-echo "numpy 1.20.3"
+echo "numpy 1.24.4"
 echo "pycuda 2024.1"
 echo "Requirements Installation Complete"
